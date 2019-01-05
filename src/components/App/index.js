@@ -16,25 +16,51 @@ const tableHeaders = ['Id', 'Name', 'Alias', 'Team'];
 
 class App extends React.Component {
     state = {
-        tableValues: [
-            ['101', 'Tony Stark', 'Iron Man', 'Avengers'],
-            ['102', 'Peter Parker', 'Spider Man', 'Avengers'],
-            ['103', 'Bruce Wayne', 'Bat Man', 'Justice League']
-        ] 
-    }
+        tableValues: [] 
+    }                           
 
     constructor(props) {
         super(props)
         this.createRecord = this.createRecord.bind(this)
     }
 
+    componentDidMount() {
+        let self = this;
+        const request = new Request('/heroes',
+        {method: 'GET', headers: {"Content-Type": "application/json"}});
+        fetch(request)
+        .then(res => res.json())
+        .then(function(data) {
+            self.setState({'tableValues': data});
+        });
+    }
+
     createRecord(name,alias,team) {
-        console.log(name,alias,team)
-        const ID = (Math.random() * 100).toString()
-        const newRecord = [ID, name, alias, team]
-        const newTableValues = [...this.state.tableValues]
-        newTableValues.push(newRecord)
-        this.setState({tableValues: newTableValues})
+        var body={
+            name: name,
+            alias: alias,
+            team: team
+        };
+
+        var request= new Request('/heroes',{
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        fetch(request)
+        .then(res => res.json())
+        .then(function() {
+            
+        });
+    
+       
+        //const ID = (Math.random() * 100).toString()
+        //const newRecord = [ID, name, alias, team]
+        //const newTableValues = [...this.state.tableValues]
+        //newTableValues.push(newRecord)
+        //this.setState({tableValues: newTableValues})
     }
 
     render() {
@@ -48,21 +74,7 @@ class App extends React.Component {
                                      history={props.history} 
                                 />
                     }}/>
-                    <Route exact path= "/view/:id" render={(props) => {
-                        console.log(props)
-                        const data = this.state.tableValues.find(val => val[0] === props.match.params.id)
-                        const newRecord = {
-                                            name: data[1],
-                                            alias: data[2],
-                                            team: data[3]
-                                        }
-                        return <View
-                                    name={newRecord.name}
-                                    alias={newRecord.alias}
-                                    team={newRecord.team}
-                                />
-                    }}/>
-
+                    <Route exact path= "/view/:id" component={View}/>
                     <Route exact path= "/create" render={(props) => {
                         return <Form 
                                     formSubmitCallback={this.createRecord}
@@ -70,20 +82,7 @@ class App extends React.Component {
                                 />
                     }}/>
 
-                    <Route exact path= "/edit/:id" render={(props) => {
-                        console.log(props)
-                        const data = this.state.tableValues.find(val => val[0] === props.match.params.id)
-                        const newRecord = {
-                                            name: data[1],
-                                            alias: data[2],
-                                            team: data[3]
-                                        }
-                        return <Edit
-                                    name={newRecord.name}
-                                    alias={newRecord.alias}
-                                    team={newRecord.team}
-                                />
-                    }}/>
+                    <Route exact path= "/edit/:id" component={Edit}/>
 
                     <Redirect to="/list"/>
                 </Switch>

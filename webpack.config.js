@@ -4,6 +4,7 @@ const CleanWebpackPlugin = require("clean-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const loki = require("lokijs");
 
 const DEV = process.env.NODE_ENV !== "production";
 const DIST = "dist";
@@ -22,7 +23,60 @@ module.exports = {
   devServer: {
     contentBase: DIST_PATH,
     hot: true,
-    historyApiFallback: true
+    historyApiFallback: true,
+    setup(app){
+
+      var bodyParser = require('body-parser');
+      var db = new loki('db.json');
+      var heroes = db.addCollection('heroes');
+
+      app.use(bodyParser.urlencoded({ extended: true }));
+      app.use(bodyParser.json());
+
+      app.post("/heroes",bodyParser.json(), function(req, res){
+          heroes.insert(req.body);
+          res.send("POST res sent from webpack dev server")
+      });
+
+      app.put("/heroes",bodyParser.json(), function(req, res){
+        var hero = heroes.get(req.body.id)
+        for(var key in req.body) {
+          hero[key] = req.body[key];
+        }
+        heroes.update(hero);
+        res.send("PUT res sent from webpack dev server")
+      });
+
+      app.delete("/heroes",bodyParser.json(), function(req, res){
+        heroes.remove(req.body.id);
+        res.send("DELETE res sent from webpack dev server")
+      });
+
+      heroes.insert({'name': 'Tony Stark', 'alias': 'Iron Man', 'team': 'Avengers'});
+      heroes.insert({'name': 'Peter Parker', 'alias': 'Spider Man', 'team': 'Avengers'});
+      heroes.insert({'name': 'Bruce Wayne', 'alias': 'Bat Man', 'team': 'Justice League'});
+
+      app.get("/heroes/:id", bodyParser.json(), function(req,res) {
+        var hero = heroes.get(req.params.id);
+        res.send([
+          hero['$loki'],
+          hero.name,
+          hero.alias,
+          hero.team
+        ]);
+      });
+
+      app.get("/heroes", function(req,res) {
+        var values = heroes.find({});
+        values = values.map((val) => [
+          val['$loki'],
+          val.name,
+          val.alias,
+          val.team
+        ]);
+        res.send(values);
+      });
+  }
   },
   module: {
     rules: [

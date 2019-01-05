@@ -21,7 +21,7 @@ class Table extends React.Component {
 
     render() {
         return(
-            <table>
+            <table id="myTable">
                 <Thead values={this.props.headers}/>
                 <Tbody values={this.props.values} onViewClick={this.onViewClick} onEditClick={this.onEditClick}/>
             </table>
