@@ -24,7 +24,7 @@ class App extends React.Component {
         this.createRecord = this.createRecord.bind(this)
     }
 
-    componentDidMount() {
+    fetchList() {
         let self = this;
         const request = new Request('/heroes',
         {method: 'GET', headers: {"Content-Type": "application/json"}});
@@ -35,7 +35,12 @@ class App extends React.Component {
         });
     }
 
+    componentDidMount() {
+        this.fetchList()
+    }
+
     createRecord(name,alias,team) {
+        const self = this;
         var body={
             name: name,
             alias: alias,
@@ -50,9 +55,8 @@ class App extends React.Component {
             }
         });
         fetch(request)
-        .then(res => res.json())
         .then(function() {
-            
+            self.fetchList();
         });
     
        
